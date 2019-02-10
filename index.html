@@ -1,0 +1,112 @@
+<html>
+<title>Live Stock App</title>
+<script src="socket.io/socket.io.js"></script>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+<script>
+$(document).ready(function(){
+    var socket=io();
+    var tr="true";
+    start_time= new Date(); 
+
+    //connectivity of socket     
+    socket.emit('connect',tr);
+    socket.on('connect_cl',function(msg){
+        var table = document.getElementById('Data').rows;
+        var rows = document.getElementById("Data").rows.length;
+        msg=msg.substr(1).slice(0, -1);
+        var array = JSON.parse("["+msg+"]");
+        if (rows < 2  ){
+        console.log("if 1");
+        for (var i=0;i<array.length;i++){
+        document.getElementById("Data").innerHTML += "<tr><td>"+array[i][0]+"</td> <td id="+array[i][0]+">"+array[i][1]+"</td><td id="+array[i][0]+"time"+"></td><td id="+array[i][0]+"str"+" style='display:none'>"+start_time+"</td></tr>";
+        }
+        }
+        else{
+        //load company table data    
+        company_name=[];
+        console.log("else 1");
+        for (var i=0;i<array.length;i++){
+        for (var x = 1; x < rows; x++) {
+        var rw=table[x];
+        var cll=rw.cells[0];
+        company_name.push(cll.innerHTML);
+        end(rw.cells[3].innerHTML,rw.cells[2].id);
+        }
+        //To update stock details
+            if (company_name.includes(array[i][0])){
+            console.log("value present");
+            array.splice(i,1);
+            var current_val=$('td:contains('+array[i][0]+')').closest('td').next().text();
+            if (current_val < array[i][1]){
+                $('td:contains('+array[i][0]+')').closest('td').next().text(array[i][1]);
+                start_time2= new Date(); 
+                price_inc(array[i][0]); 
+                document.getElementById(array[i][0]+"str").innerHTML=start_time2;
+                end(document.getElementById(array[i][0]+"str").innerHTML,array[i][0]+"time"); 
+                console.log(current_val,array[i][1]);
+            }
+            else{
+                $('td:contains('+array[i][0]+')').closest('td').next().text(array[i][1]);
+                start_time2= new Date(); 
+                document.getElementById(array[i][0]+"str").innerHTML=start_time2;
+                price_dcs(array[i][0]);
+                end(document.getElementById(array[i][0]+"str").innerHTML,array[i][0]+"time");
+                console.log(current_val,array[i][1]);
+            } 
+    }
+        else{
+            document.getElementById("Data").innerHTML += "<tr><td>"+array[i][0]+"</td> <td id="+array[i][0]+">"+array[i][1]+"</td><td id="+array[i][0]+"time"+"></td><td id="+array[i][0]+"str"+" style='display:none'>"+start_time+"</td></tr>";
+        }
+    }
+    }
+    });
+})
+
+//calculation of time
+function end(str,id) {
+endTime = new Date();
+var timeDiff = endTime - Date.parse(str); //in ms
+timeDiff /= 1000;
+var seconds = Math.round(timeDiff);
+document.getElementById(id).innerHTML=seconds+"seconds ago";
+}
+
+//differentiate stock price
+function price_inc(str) {    
+    document.getElementById(str).style.color = "green";
+    console.log("Function called")
+    moment().fromNow();
+}
+function price_dcs(str) {
+    document.getElementById(str).style.color = "red";
+}
+
+</script>
+
+<body>
+    
+    <div class="w3-container w3-teal w3-center">  
+    <h1>Live Stock </h1>
+    </div>
+
+    <table class="w3-table w3-bordered w3-centered" style="width:100%; border:10" id="Data">
+    <tr class="w3-red">
+    <th>Company</th>
+    <th>Price</th> 
+    <th>Last Updated</th>
+    </tr> 
+    </table>
+
+
+
+    <div class="w3-container w3-center w3-teal">
+        <button class="w3-button" onclick="myFunction()">Refresh content</button>
+        <script>
+        function myFunction() {
+            location.reload();
+        }
+        </script>
+    </div>
+</body>
+</html>
